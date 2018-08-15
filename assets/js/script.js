@@ -15,6 +15,8 @@ function createGraph() {
         height = 600,
         padding = 30;
 
+    let tempColor;
+
     console.log(gdpData);
 
     const yScale = d3.scaleLinear()
@@ -37,14 +39,26 @@ function createGraph() {
         .attr("height", function (d) {
             return yScale(d[1]);
         })
-        .attr("width", function(d){
+        .attr("width", function (d) {
             return xScale.bandwidth();
         })
-        .attr("x", function(d){
+        .attr("x", function (d) {
             return xScale(d);
         })
-        .attr("y", function(d){
+        .attr("y", function (d) {
             return height - yScale(d[1]);
+        })
+        .on('mouseenter', function (d, i) {
+            console.log(this);
+            d3.select(this)
+                .style("opacity", "0.7");
+
+            console.log(d);
+            console.log(d3.event.pageX, d3.event.pageY);
+        })
+        .on('mouseleave', function (d, i) {
+            d3.select(this)
+                .style("opacity", "1");
         });
 };
 
