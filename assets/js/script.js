@@ -1,4 +1,10 @@
-let gdpData = [];
+let gdpData = [],
+    years = [];
+width = 700,
+    height = 600,
+    padding = 40;
+
+let barWidth;
 
 function loadData() {
     fetch('./assets/js/gdp_data.json')
@@ -6,16 +12,17 @@ function loadData() {
         .then(data => {
             console.log("Data Loaded", data);
             gdpData = data.data;
+
+            years = data.data.map(data => {
+                return data[0].split('-')[0];
+            });
+
+            barWidth = width / years.length;
             createGraph();
         });
 }
 
 function createGraph() {
-    let width = 700,
-        height = 600,
-        padding = 30;
-
-    let tempColor;
 
     console.log(gdpData);
 
@@ -23,14 +30,14 @@ function createGraph() {
         .domain([0, d3.max(gdpData, d => d[1])])
         .range([0, height]);
 
-    const xScale = d3.scaleBand()
-        .domain(gdpData)
+    const xScale = d3.scaleLinear()
+        .domain([d3.min(years), d3.max(years)])
         .range([0, width]);
 
     const svg = d3.select("body")
         .append("svg")
-        .attr('width', '700')
-        .attr('height', '600');
+        .attr('width', width + padding + 20) //+20 for bottom axis
+        .attr('height', height + padding + 20); //+20 for left axis
 
     svg.selectAll("rect")
         .data(gdpData)
@@ -39,14 +46,12 @@ function createGraph() {
         .attr("height", function (d) {
             return yScale(d[1]);
         })
-        .attr("width", function (d) {
-            return xScale.bandwidth();
-        })
-        .attr("x", function (d) {
-            return xScale(d);
+        .attr("width", barWidth)
+        .attr("x", function (d, i) {
+            return i * barWidth + padding;
         })
         .attr("y", function (d) {
-            return height - yScale(d[1]);
+            return height - yScale(d[1]) + 20;
         })
         .on('mouseenter', function (d, i) {
             console.log(this);
@@ -60,6 +65,26 @@ function createGraph() {
             d3.select(this)
                 .style("opacity", "1");
         });
+
+    // Axis
+    const xAxis = d3.axisBottom(xScale)
+        .tickFormat(d3.format('d'));
+
+    const yAxisScale = d3.scaleLinear()
+        .domain([0, d3.max(gdpData, d => d[1])])
+        .range([height, 0]);
+
+    const yAxis = d3.axisLeft(yAxisScale)
+
+    svg.append("g")
+        .attr("id", "x-axis")
+        .attr("transform", 'translate(' + padding + ', ' + (height + 20) + ')')
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("id", "y-axis")
+        .attr("transform", 'translate(' + 40 + ', ' + (0 + 20) + ')')
+        .call(yAxis);
 };
 
 document.addEventListener('DOMContentLoaded', function (e) {
